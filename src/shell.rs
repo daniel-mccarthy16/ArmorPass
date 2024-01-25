@@ -49,13 +49,13 @@ pub struct DeletePasswordOptions {
 impl Command {
     fn from_str(command_str: &str) -> Option<Command> {
         match command_str {
-            "create" => Some(Command::Create(CreatePasswordOptions::default())),
-            "delete" => Some(Command::Delete(DeletePasswordOptions::default())),
-            "retrieve" => Some(Command::Retrieve(RetrieveSingleOptions::default())),
-            "retrieveall" => Some(Command::RetrieveAll(RetrieveAllOptions::default())),
-            "update" => Some(Command::Update(UpdatePasswordOptions::default())),
-            "quit" => Some(Command::Quit),
-            "exit" => Some(Command::Quit),
+            cs if cs.eq_ignore_ascii_case("create") => Some(Command::Create(CreatePasswordOptions::default())),
+            cs if cs.eq_ignore_ascii_case("delete") => Some(Command::Delete(DeletePasswordOptions::default())),
+            cs if cs.eq_ignore_ascii_case("retrieve") => Some(Command::Retrieve(RetrieveSingleOptions::default())),
+            cs if cs.eq_ignore_ascii_case("retrieveall") => Some(Command::RetrieveAll(RetrieveAllOptions::default())),
+            cs if cs.eq_ignore_ascii_case("update") => Some(Command::Update(UpdatePasswordOptions::default())),
+            cs if cs.eq_ignore_ascii_case("quit") => Some(Command::Quit),
+            cs if cs.eq_ignore_ascii_case("exit") => Some(Command::Quit),
             _ => None,
         }
     }
