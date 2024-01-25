@@ -4,7 +4,7 @@ use crate::password_manager::PasswordManager;
 use crate::utility::print_credential;
 use crate::utility::print_credential_list;
 use crate::utility::prompt;
-use std::path::PathBuf;
+use crate::utility::get_home_dir;
 
 enum Command {
     Create(CreatePasswordOptions),
@@ -133,7 +133,9 @@ impl Shell {
     }
 
     fn handle_authentication_prompt(&mut self, masterpassword: &str) {
-        match PasswordManager::new(PathBuf::from("/tmp/armorpass.enc"), masterpassword) {
+        let home_dir = get_home_dir().expect("[ERROR]: Could not find armorpass file");
+        let file_path = home_dir.join(".armorpass.enc");
+        match PasswordManager::new(file_path, masterpassword) {
             Ok(password_manager) => {
                 self.state = ShellState::MainPrompt;
                 self.password_manager = Some(password_manager);
