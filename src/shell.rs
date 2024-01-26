@@ -1,10 +1,10 @@
 use crate::generator::PasswordGenerator;
 use crate::generator::PasswordGeneratorOptions;
 use crate::password_manager::PasswordManager;
+use crate::utility::get_home_dir;
 use crate::utility::print_credential;
 use crate::utility::print_credential_list;
 use crate::utility::prompt;
-use crate::utility::get_home_dir;
 
 enum Command {
     Create(CreatePasswordOptions),
@@ -49,11 +49,21 @@ pub struct DeletePasswordOptions {
 impl Command {
     fn from_str(command_str: &str) -> Option<Command> {
         match command_str {
-            cs if cs.eq_ignore_ascii_case("create") => Some(Command::Create(CreatePasswordOptions::default())),
-            cs if cs.eq_ignore_ascii_case("delete") => Some(Command::Delete(DeletePasswordOptions::default())),
-            cs if cs.eq_ignore_ascii_case("retrieve") => Some(Command::Retrieve(RetrieveSingleOptions::default())),
-            cs if cs.eq_ignore_ascii_case("retrieveall") => Some(Command::RetrieveAll(RetrieveAllOptions::default())),
-            cs if cs.eq_ignore_ascii_case("update") => Some(Command::Update(UpdatePasswordOptions::default())),
+            cs if cs.eq_ignore_ascii_case("create") => {
+                Some(Command::Create(CreatePasswordOptions::default()))
+            }
+            cs if cs.eq_ignore_ascii_case("delete") => {
+                Some(Command::Delete(DeletePasswordOptions::default()))
+            }
+            cs if cs.eq_ignore_ascii_case("retrieve") => {
+                Some(Command::Retrieve(RetrieveSingleOptions::default()))
+            }
+            cs if cs.eq_ignore_ascii_case("retrieveall") => {
+                Some(Command::RetrieveAll(RetrieveAllOptions::default()))
+            }
+            cs if cs.eq_ignore_ascii_case("update") => {
+                Some(Command::Update(UpdatePasswordOptions::default()))
+            }
             cs if cs.eq_ignore_ascii_case("quit") => Some(Command::Quit),
             cs if cs.eq_ignore_ascii_case("exit") => Some(Command::Quit),
             _ => None,

@@ -1,8 +1,8 @@
 use crate::password_manager::CredentialSet;
 use prettytable::{row, Cell, Row, Table};
+use std::env;
 use std::io::{stdin, stdout, Write};
 use std::path::PathBuf;
-use std::env;
 
 pub fn validate_identifier(identifier: &str) -> Result<(), ArmorPassError> {
     if !is_at_least_three_characters_long(identifier) {
