@@ -1,10 +1,10 @@
 use crate::generator::PasswordGenerator;
 use crate::generator::PasswordGeneratorOptions;
 use crate::password_manager::PasswordManager;
+use crate::utility::get_home_dir;
 use crate::utility::print_credential;
 use crate::utility::print_credential_list;
 use crate::utility::prompt;
-use std::path::PathBuf;
 
 enum Command {
     Create(CreatePasswordOptions),
@@ -49,13 +49,23 @@ pub struct DeletePasswordOptions {
 impl Command {
     fn from_str(command_str: &str) -> Option<Command> {
         match command_str {
-            "create" => Some(Command::Create(CreatePasswordOptions::default())),
-            "delete" => Some(Command::Delete(DeletePasswordOptions::default())),
-            "retrieve" => Some(Command::Retrieve(RetrieveSingleOptions::default())),
-            "retrieveall" => Some(Command::RetrieveAll(RetrieveAllOptions::default())),
-            "update" => Some(Command::Update(UpdatePasswordOptions::default())),
-            "quit" => Some(Command::Quit),
-            "exit" => Some(Command::Quit),
+            cs if cs.eq_ignore_ascii_case("create") => {
+                Some(Command::Create(CreatePasswordOptions::default()))
+            }
+            cs if cs.eq_ignore_ascii_case("delete") => {
+                Some(Command::Delete(DeletePasswordOptions::default()))
+            }
+            cs if cs.eq_ignore_ascii_case("retrieve") => {
+                Some(Command::Retrieve(RetrieveSingleOptions::default()))
+            }
+            cs if cs.eq_ignore_ascii_case("retrieveall") => {
+                Some(Command::RetrieveAll(RetrieveAllOptions::default()))
+            }
+            cs if cs.eq_ignore_ascii_case("update") => {
+                Some(Command::Update(UpdatePasswordOptions::default()))
+            }
+            cs if cs.eq_ignore_ascii_case("quit") => Some(Command::Quit),
+            cs if cs.eq_ignore_ascii_case("exit") => Some(Command::Quit),
             _ => None,
         }
     }
@@ -133,7 +143,9 @@ impl Shell {
     }
 
     fn handle_authentication_prompt(&mut self, masterpassword: &str) {
-        match PasswordManager::new(PathBuf::from("/tmp/armorpass.enc"), masterpassword) {
+        let home_dir = get_home_dir().expect("[ERROR]: Could not find armorpass file");
+        let file_path = home_dir.join(".armorpass.enc");
+        match PasswordManager::new(file_path, masterpassword) {
             Ok(password_manager) => {
                 self.state = ShellState::MainPrompt;
                 self.password_manager = Some(password_manager);

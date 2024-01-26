@@ -3,8 +3,9 @@ use openssl::hash::MessageDigest;
 use openssl::pkcs5::pbkdf2_hmac;
 use openssl::rand::rand_bytes;
 use openssl::symm::{Cipher, Crypter, Mode};
-use std::fs::File;
+use std::fs::{File, Permissions};
 use std::io::{Read, Write};
+use std::os::unix::fs::PermissionsExt;
 use std::path::PathBuf;
 
 const ITERATIONS: usize = 100_000;
@@ -66,6 +67,8 @@ impl CryptoManager {
         file.write_all(&self.salt)?;
         file.write_all(&self.iv)?;
         file.write_all(&self.ciphertext)?;
+        let permissions = Permissions::from_mode(0o600);
+        std::fs::set_permissions(&self.filepath, permissions)?;
         Ok(())
     }
 

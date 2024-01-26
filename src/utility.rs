@@ -1,6 +1,8 @@
 use crate::password_manager::CredentialSet;
 use prettytable::{row, Cell, Row, Table};
+use std::env;
 use std::io::{stdin, stdout, Write};
+use std::path::PathBuf;
 
 pub fn validate_identifier(identifier: &str) -> Result<(), ArmorPassError> {
     if !is_at_least_three_characters_long(identifier) {
@@ -61,6 +63,10 @@ pub fn print_credential(credential: &CredentialSet) {
         Cell::new(&credential.password),
     ]));
     table.printstd();
+}
+
+pub fn get_home_dir() -> Option<PathBuf> {
+    env::var("HOME").ok().map(PathBuf::from)
 }
 
 #[derive(Debug, PartialEq)]
