@@ -20,6 +20,23 @@ pub struct CredentialSet {
     pub password: String,
 }
 
+impl CredentialSet {
+   pub fn mask(&self) -> MaskedCredentialSet {
+        MaskedCredentialSet {
+            identifier: self.identifier.clone(),
+            username: self.username.clone(),
+            password: "*".repeat(self.password.len())
+        }
+   }
+}
+
+#[derive(Debug)]
+pub struct MaskedCredentialSet {
+    pub identifier: String,
+    pub username: String,
+    pub password: String
+}
+
 impl PasswordManager {
     pub fn new(
         armorpass_path: PathBuf,
@@ -128,6 +145,15 @@ impl PasswordManager {
         self.records
             .iter()
             .filter(|&record| record.identifier == identifer_name)
+            .collect()
+    }
+
+    pub fn retrieve_all_credentials_masked(&self, options: &RetrieveAllOptions) -> Vec<MaskedCredentialSet> {
+        let identifer_name: &str = options.identifier.as_str();
+        self.records
+            .iter()
+            .filter(|&record| record.identifier == identifer_name)
+            .map(|record| record.mask())
             .collect()
     }
 

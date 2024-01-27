@@ -1,8 +1,10 @@
-use crate::password_manager::CredentialSet;
+use crate::password_manager::{CredentialSet, MaskedCredentialSet};
 use prettytable::{row, Cell, Row, Table};
 use std::env;
 use std::io::{stdin, stdout, Write};
 use std::path::PathBuf;
+use arboard::Clipboard;
+use std::{thread, time::Duration};
 
 pub fn validate_identifier(identifier: &str) -> Result<(), ArmorPassError> {
     if !is_at_least_three_characters_long(identifier) {
@@ -26,7 +28,7 @@ pub fn prompt(prompttext: &str) -> String {
     input.trim().to_string()
 }
 
-// Helper method to prompt for a number with a default value
+//TODO - am i using this, it makes no sense, needs fixing
 pub fn prompt_for_number(prompttxt: &str) -> Option<usize> {
     let input = prompt(prompttxt);
     if input.trim().is_empty() {
@@ -41,7 +43,7 @@ pub fn prompt_for_confirmation(prompttxt: &str) -> bool {
     matches!(input.as_str(), "y" | "yes")
 }
 
-pub fn print_credential_list(credential_list: Vec<&CredentialSet>) {
+pub fn print_credential_list(credential_list: Vec<MaskedCredentialSet>) {
     let mut table = Table::new();
     table.add_row(row!["Identifier", "Username", "Password"]);
     for credential in credential_list {
@@ -67,6 +69,35 @@ pub fn print_credential(credential: &CredentialSet) {
 
 pub fn get_home_dir() -> Option<PathBuf> {
     env::var("HOME").ok().map(PathBuf::from)
+}
+
+//TODO - Give this a return type?
+pub fn copy_to_clipboard_then_clear(text: &str) {
+    match Clipboard::new() {
+        Ok(mut clipboard) => {
+            if let Err(e) = clipboard.set_text(text.to_owned()) {
+                eprintln!("[ERROR]: Failed to copy to clipboard: {e}");
+                return;
+            }
+
+            println!("[INFO]: Sensitive data copied to clipboard. It will be cleared in 20 seconds.");
+
+            let content_to_clear = text.to_owned();
+
+            // Spawn a new thread to clear the clipboard after 20 seconds
+            thread::spawn(move || {
+                thread::sleep(Duration::from_secs(20));
+                match clipboard.get_text() {
+                    Ok(current_content) if current_content == content_to_clear => {
+                        let _ = clipboard.set_text("".to_owned());
+                    }
+                    Ok(_) => {} // The content has changed, do not clear the clipboard.
+                    Err(e) => eprintln!("[ERROR]: Failed to get clipboard content: {}", e),
+                }
+            });
+        }
+        Err(e) => eprintln!("[ERROR]: Failed to instantiate clipboard: {e}"),
+    }
 }
 
 #[derive(Debug, PartialEq)]
