@@ -143,7 +143,7 @@ impl Shell {
     }
 
     fn handle_authentication_prompt(&mut self, masterpassword: &str) {
-        let home_dir = get_home_dir().expect("[ERROR]: Could not find armorpass file");
+        let home_dir = get_home_dir().expect("[ERROR]: could not find home directory, is HOME env variable missing?");
         let file_path = home_dir.join(".armorpass.enc");
         match PasswordManager::new(file_path, masterpassword) {
             Ok(password_manager) => {

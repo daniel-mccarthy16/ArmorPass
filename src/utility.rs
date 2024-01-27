@@ -5,6 +5,7 @@ use std::io::{stdin, stdout, Write};
 use std::path::PathBuf;
 use arboard::Clipboard;
 use std::{thread, time::Duration};
+use std::error::Error;
 
 pub fn validate_identifier(identifier: &str) -> Result<(), ArmorPassError> {
     if !is_at_least_three_characters_long(identifier) {
@@ -67,8 +68,13 @@ pub fn print_credential(credential: &CredentialSet) {
     table.printstd();
 }
 
-pub fn get_home_dir() -> Option<PathBuf> {
-    env::var("HOME").ok().map(PathBuf::from)
+//TODO - needs to compile different versions of method per OS, allow override for file location
+//somehow? 
+pub fn get_home_dir() -> Result<PathBuf, Box<dyn Error>> {
+    match env::var("HOME") { 
+        Ok(path) => Ok(PathBuf::from(path)),
+        Err(e) => Err(Box::new(e)),
+    }
 }
 
 //TODO - Give this a return type?
