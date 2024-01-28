@@ -5,6 +5,7 @@ use crate::utility::copy_to_clipboard_then_clear;
 use crate::utility::get_home_dir;
 use crate::utility::print_credential_list;
 use crate::utility::prompt;
+use crate::utility::armor_file_exists;
 use crate::strings::{PROMPT_MAIN_COMMAND, PROMPT_MASTER_PASSWORD};
 
 enum Command {
@@ -85,6 +86,7 @@ impl Command {
 enum ShellState {
     MainPrompt,
     AuthenticatePrompt,
+    InitializationPrompt
 }
 
 pub struct Shell {
@@ -105,7 +107,17 @@ impl Default for Shell {
 
 impl Shell {
     pub fn new() -> Shell {
-        Shell::default()
+        let initial_state;
+        if armor_file_exists() {
+            initial_state = ShellState::AuthenticatePrompt;
+        } else {
+            initial_state = ShellState::InitializationPrompt;
+        }
+        Shell {
+            should_terminate: false,
+            state: initial_state,
+            password_manager: None
+        }
     }
 
     pub fn run(&mut self) {
@@ -118,6 +130,9 @@ impl Shell {
                 ShellState::AuthenticatePrompt => {
                     let masterpassword = prompt(PROMPT_MASTER_PASSWORD);
                     self.handle_authentication_prompt(&masterpassword);
+                },
+                ShellState::InitializationPrompt => {
+                    self.handle_initialization();
                 }
             }
         }
@@ -154,6 +169,31 @@ impl Shell {
                 eprintln!("Failed auth attempt: {}", e);
             }
         }
+    }
+
+    fn handle_initialization(&mut self) {
+        println!("Welcome to the ArmorPass setup wizard!");
+        let mut input;
+        let mut input2;
+        loop {
+            input = prompt("Please set your password");
+            input2 = prompt("Please re-enter your password for confirmation");
+            if input == input2 {
+                break;
+            }
+        }
+        let home_dir = get_home_dir().expect("[ERROR]: could not find home directory, is HOME env variable missing?");
+        let file_path = home_dir.join(".armorpass.enc");
+        match PasswordManager::new(file_path, &input) {
+            Ok(password_manager) => {
+                self.state = ShellState::MainPrompt;
+                self.password_manager = Some(password_manager);
+            }
+            Err(e) => {
+                eprintln!("Failed auth attempt: {}", e);
+            }
+        }
+
     }
 
     fn handle_create_command(&mut self, options: &mut CreatePasswordOptions) {

@@ -6,6 +6,7 @@ use std::path::PathBuf;
 use arboard::Clipboard;
 use std::{thread, time::Duration};
 use std::error::Error;
+use std::fs;
 
 pub fn validate_identifier(identifier: &str) -> Result<(), ArmorPassError> {
     if !is_at_least_three_characters_long(identifier) {
@@ -103,6 +104,15 @@ pub fn copy_to_clipboard_then_clear(text: &str) {
             });
         }
         Err(e) => eprintln!("[ERROR]: Failed to instantiate clipboard: {e}"),
+    }
+}
+
+pub fn armor_file_exists() -> bool {
+    let home_dir =  get_home_dir().unwrap();
+    let file_path = home_dir.join(".armorpass.enc");
+    match fs::metadata(file_path) {
+        Ok(_) => true,
+        Err(_e) => false
     }
 }
 
