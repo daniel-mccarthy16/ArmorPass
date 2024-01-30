@@ -30,13 +30,20 @@ pub fn prompt(prompttext: &str) -> String {
     input.trim().to_string()
 }
 
-//TODO - am i using this, it makes no sense, needs fixing
-pub fn prompt_for_number(prompttxt: &str) -> Option<usize> {
-    let input = prompt(prompttxt);
-    if input.trim().is_empty() {
-        None
-    } else {
-        input.trim().parse().ok()
+pub fn prompt_for_number(prompttxt: &str) -> Option<u8> {
+    loop {
+        let input = prompt(prompttxt);
+        if input.trim().is_empty() {
+            return None;
+        } else {
+            match input.trim().parse::<u8>() {
+                Ok(num) => return Some(num),
+                Err(_) => {
+                    eprintln!("Please enter a valid number (0-255)");
+                    continue;
+                }
+            }
+        }
     }
 }
 
