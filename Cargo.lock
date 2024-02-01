@@ -3,6 +3,19 @@
 version = 3
 
 [[package]]
+name = "ArmorPass"
+version = "0.1.0"
+dependencies = [
+ "arboard",
+ "openssl",
+ "prettytable-rs",
+ "rand",
+ "serde",
+ "serde_json",
+ "uuid",
+]
+
+[[package]]
 name = "adler"
 version = "1.0.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -25,19 +38,6 @@ dependencies = [
  "thiserror",
  "winapi",
  "x11rb",
-]
-
-[[package]]
-name = "armor_pass"
-version = "0.1.0"
-dependencies = [
- "arboard",
- "openssl",
- "prettytable-rs",
- "rand",
- "serde",
- "serde_json",
- "uuid",
 ]
 
 [[package]]
