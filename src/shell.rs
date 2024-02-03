@@ -113,9 +113,9 @@ impl Default for Shell {
 impl Shell {
     pub fn new() -> Shell {
         let initial_state = if armor_file_exists() {
-             ShellState::Authenticate
+            ShellState::Authenticate
         } else {
-             ShellState::Initialization
+            ShellState::Initialization
         };
         Shell {
             should_terminate: false,
