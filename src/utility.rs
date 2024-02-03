@@ -1,8 +1,12 @@
-use crate::password_manager::CredentialSet;
+use crate::password_manager::{CredentialSet, MaskedCredentialSet};
+use arboard::Clipboard;
 use prettytable::{row, Cell, Row, Table};
 use std::env;
+use std::error::Error;
+use std::fs;
 use std::io::{stdin, stdout, Write};
 use std::path::PathBuf;
+use std::{thread, time::Duration};
 
 pub fn validate_identifier(identifier: &str) -> Result<(), ArmorPassError> {
     if !is_at_least_three_characters_long(identifier) {
@@ -26,13 +30,20 @@ pub fn prompt(prompttext: &str) -> String {
     input.trim().to_string()
 }
 
-// Helper method to prompt for a number with a default value
-pub fn prompt_for_number(prompttxt: &str) -> Option<usize> {
-    let input = prompt(prompttxt);
-    if input.trim().is_empty() {
-        None
-    } else {
-        input.trim().parse().ok()
+pub fn prompt_for_number(prompttxt: &str) -> Option<u8> {
+    loop {
+        let input = prompt(prompttxt);
+        if input.trim().is_empty() {
+            return None;
+        } else {
+            match input.trim().parse::<u8>() {
+                Ok(num) => return Some(num),
+                Err(_) => {
+                    eprintln!("Please enter a valid number (0-255)");
+                    continue;
+                }
+            }
+        }
     }
 }
 
@@ -41,7 +52,7 @@ pub fn prompt_for_confirmation(prompttxt: &str) -> bool {
     matches!(input.as_str(), "y" | "yes")
 }
 
-pub fn print_credential_list(credential_list: Vec<&CredentialSet>) {
+pub fn print_credential_list(credential_list: Vec<MaskedCredentialSet>) {
     let mut table = Table::new();
     table.add_row(row!["Identifier", "Username", "Password"]);
     for credential in credential_list {
@@ -65,8 +76,53 @@ pub fn print_credential(credential: &CredentialSet) {
     table.printstd();
 }
 
-pub fn get_home_dir() -> Option<PathBuf> {
-    env::var("HOME").ok().map(PathBuf::from)
+//TODO - needs to compile different versions of method per OS, allow override for file location
+//somehow?
+pub fn get_home_dir() -> Result<PathBuf, Box<dyn Error>> {
+    match env::var("HOME") {
+        Ok(path) => Ok(PathBuf::from(path)),
+        Err(e) => Err(Box::new(e)),
+    }
+}
+
+//TODO - Give this a return type?
+pub fn copy_to_clipboard_then_clear(text: &str) {
+    match Clipboard::new() {
+        Ok(mut clipboard) => {
+            if let Err(e) = clipboard.set_text(text.to_owned()) {
+                eprintln!("[ERROR]: Failed to copy to clipboard: {e}");
+                return;
+            }
+
+            println!(
+                "[INFO]: Sensitive data copied to clipboard. It will be cleared in 20 seconds."
+            );
+
+            let content_to_clear = text.to_owned();
+
+            // Spawn a new thread to clear the clipboard after 20 seconds
+            thread::spawn(move || {
+                thread::sleep(Duration::from_secs(20));
+                match clipboard.get_text() {
+                    Ok(current_content) if current_content == content_to_clear => {
+                        let _ = clipboard.set_text("".to_owned());
+                    }
+                    Ok(_) => {} // The content has changed, do not clear the clipboard.
+                    Err(e) => eprintln!("[ERROR]: Failed to get clipboard content: {}", e),
+                }
+            });
+        }
+        Err(e) => eprintln!("[ERROR]: Failed to instantiate clipboard: {e}"),
+    }
+}
+
+pub fn armor_file_exists() -> bool {
+    let home_dir = get_home_dir().unwrap();
+    let file_path = home_dir.join(".armorpass.enc");
+    match fs::metadata(file_path) {
+        Ok(_) => true,
+        Err(_e) => false,
+    }
 }
 
 #[derive(Debug, PartialEq)]

@@ -1,8 +1,10 @@
 use crate::generator::PasswordGenerator;
 use crate::generator::PasswordGeneratorOptions;
 use crate::password_manager::PasswordManager;
+use crate::strings::{PROMPT_MAIN_COMMAND, PROMPT_MASTER_PASSWORD};
+use crate::utility::armor_file_exists;
+use crate::utility::copy_to_clipboard_then_clear;
 use crate::utility::get_home_dir;
-use crate::utility::print_credential;
 use crate::utility::print_credential_list;
 use crate::utility::prompt;
 
@@ -64,8 +66,12 @@ impl Command {
             cs if cs.eq_ignore_ascii_case("update") => {
                 Some(Command::Update(UpdatePasswordOptions::default()))
             }
-            cs if cs.eq_ignore_ascii_case("quit") => Some(Command::Quit),
-            cs if cs.eq_ignore_ascii_case("exit") => Some(Command::Quit),
+            cs if cs.eq_ignore_ascii_case("quit")
+                || cs.eq_ignore_ascii_case("exit")
+                || cs.eq_ignore_ascii_case("q") =>
+            {
+                Some(Command::Quit)
+            }
             _ => None,
         }
     }
@@ -83,8 +89,9 @@ impl Command {
 }
 
 enum ShellState {
-    MainPrompt,
-    AuthenticatePrompt,
+    Main,
+    Authenticate,
+    Initialization,
 }
 
 pub struct Shell {
@@ -97,7 +104,7 @@ impl Default for Shell {
     fn default() -> Shell {
         Shell {
             should_terminate: false,
-            state: ShellState::AuthenticatePrompt,
+            state: ShellState::Authenticate,
             password_manager: None,
         }
     }
@@ -105,19 +112,31 @@ impl Default for Shell {
 
 impl Shell {
     pub fn new() -> Shell {
-        Shell::default()
+        let initial_state = if armor_file_exists() {
+            ShellState::Authenticate
+        } else {
+            ShellState::Initialization
+        };
+        Shell {
+            should_terminate: false,
+            state: initial_state,
+            password_manager: None,
+        }
     }
 
     pub fn run(&mut self) {
         while !self.should_terminate {
             match self.state {
-                ShellState::MainPrompt => {
-                    let input = prompt("Enter a command: ");
+                ShellState::Main => {
+                    let input = prompt(PROMPT_MAIN_COMMAND);
                     self.handle_main_command(&input);
                 }
-                ShellState::AuthenticatePrompt => {
-                    let masterpassword = prompt("Please enter your master password sir: ");
+                ShellState::Authenticate => {
+                    let masterpassword = prompt(PROMPT_MASTER_PASSWORD);
                     self.handle_authentication_prompt(&masterpassword);
+                }
+                ShellState::Initialization => {
+                    self.handle_initialization();
                 }
             }
         }
@@ -132,7 +151,7 @@ impl Shell {
     }
 
     fn show_root_prompt_help_message(&self) {
-        println!("Welcome to the interactive shell! Here are the available commands:");
+        println!("Welcome to the armor pass shell! Here are the available commands:");
         println!("1. Create - Use this command to create a new item.");
         println!("2. Delete - Use this command to delete an existing item.");
         println!("3. Retrieve - Use this command to retrieve details of an existing item.");
@@ -143,11 +162,37 @@ impl Shell {
     }
 
     fn handle_authentication_prompt(&mut self, masterpassword: &str) {
-        let home_dir = get_home_dir().expect("[ERROR]: Could not find armorpass file");
+        let home_dir = get_home_dir()
+            .expect("[ERROR]: could not find home directory, is HOME env variable missing?");
         let file_path = home_dir.join(".armorpass.enc");
         match PasswordManager::new(file_path, masterpassword) {
             Ok(password_manager) => {
-                self.state = ShellState::MainPrompt;
+                self.state = ShellState::Main;
+                self.password_manager = Some(password_manager);
+            }
+            Err(e) => {
+                eprintln!("Failed auth attempt: {}", e);
+            }
+        }
+    }
+
+    fn handle_initialization(&mut self) {
+        println!("Welcome to the ArmorPass setup wizard!");
+        let mut input;
+        let mut input2;
+        loop {
+            input = prompt("Please set your password");
+            input2 = prompt("Please re-enter your password for confirmation");
+            if input == input2 {
+                break;
+            }
+        }
+        let home_dir = get_home_dir()
+            .expect("[ERROR]: could not find home directory, is HOME env variable missing?");
+        let file_path = home_dir.join(".armorpass.enc");
+        match PasswordManager::new(file_path, &input) {
+            Ok(password_manager) => {
+                self.state = ShellState::Main;
                 self.password_manager = Some(password_manager);
             }
             Err(e) => {
@@ -189,7 +234,7 @@ impl Shell {
     fn handle_retrieve_all_command(&mut self, options: &mut RetrieveAllOptions) {
         options.identifier = self.prompt_for_identifier();
         let password_manager = self.get_password_manager_mut();
-        let credential_list = password_manager.retrieve_all_credentials(options);
+        let credential_list = password_manager.retrieve_all_credentials_masked(options);
         if credential_list.is_empty() {
             eprintln!("[Warn]: Could not find any records for that identifier");
         } else {
@@ -203,7 +248,7 @@ impl Shell {
         let password_manager = self.get_password_manager_mut();
         match password_manager.retrieve_credential(options) {
             Some(credential) => {
-                print_credential(credential);
+                copy_to_clipboard_then_clear(&credential.password);
             }
             None => eprintln!(
                 "[Warn]: Could not find a record for that identifier/username combination"

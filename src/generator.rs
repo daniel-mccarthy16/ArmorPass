@@ -3,37 +3,54 @@ use rand::{distributions::Uniform, seq::SliceRandom, Rng};
 
 #[derive(Default)]
 pub struct PasswordGeneratorOptions {
-    pub length: Option<usize>,
-    pub min_uppercase: Option<usize>,
-    pub min_numbers: Option<usize>,
-    pub min_special_characters: Option<usize>,
+    pub length: Option<u8>,
+    pub min_uppercase: Option<u8>,
+    pub min_numbers: Option<u8>,
+    pub min_special_characters: Option<u8>,
     pub unicode: Option<bool>,
 }
 
 impl PasswordGeneratorOptions {
+    fn makes_sense(&self) -> bool {
+        let total_min_requirements = self.min_uppercase.unwrap_or(0)
+            + self.min_numbers.unwrap_or(0)
+            + self.min_special_characters.unwrap_or(0);
+
+        self.length.unwrap_or(20) >= total_min_requirements
+    }
+}
+
+impl PasswordGeneratorOptions {
     pub fn prompt_for_options(&mut self) {
-        self.length = prompt_for_number("Enter desired length (default 20): ");
+        loop {
+            self.length = prompt_for_number("Enter desired length (default 20): ");
 
-        self.min_uppercase =
-            prompt_for_number("Enter minimum number of uppercase characters (default 0): ");
+            self.min_uppercase =
+                prompt_for_number("Enter minimum number of uppercase characters (default 0): ");
 
-        self.min_special_characters =
-            prompt_for_number("Enter minimum number of special characters (default 0: ");
+            self.min_special_characters =
+                prompt_for_number("Enter minimum number of special characters (default 0: ");
 
-        self.min_numbers = prompt_for_number("Enter minimum number of numbers (default 0): ");
+            self.min_numbers = prompt_for_number("Enter minimum number of numbers (default 0): ");
 
-        self.unicode = Some(prompt_for_confirmation(
-            "Do you want to use unicode? (default no): ",
-        ));
+            self.unicode = Some(prompt_for_confirmation(
+                "Do you want to use unicode? (default no): ",
+            ));
+
+            if self.makes_sense() {
+                println!("[INFO]: minimum number, special values and uppercase characters must not exceed the length");
+                break;
+            }
+        }
     }
 }
 
 #[derive(Default)]
 pub struct PasswordGenerator {
-    length: usize,
-    min_uppercase: usize,
-    min_numbers: usize,
-    min_special_characters: usize,
+    length: u8,
+    min_uppercase: u8,
+    min_numbers: u8,
+    min_special_characters: u8,
     unicode: bool,
 }
 
@@ -73,7 +90,7 @@ impl PasswordGenerator {
             password.push(self.generate_random_uppercase(&mut rng));
         }
 
-        while password.len() < self.length {
+        while password.len() < self.length.into() {
             password.push(self.generate_random_ascii_character(&mut rng));
         }
 
