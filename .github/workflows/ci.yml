@@ -55,11 +55,6 @@ jobs:
       run: |
         cargo build --target=x86_64-unknown-linux-gnu --release
 
-    - name: Build Linux x86_64 Binary
-      if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-      run: |
-        cargo build --target=i686-unknown-linux-gnu --release
-
     - name: Upload Linux x64 Artifact
       if: github.event_name == 'push' && github.ref == 'refs/heads/master'
       uses: actions/upload-artifact@v2
@@ -67,9 +62,3 @@ jobs:
         name: linux-x64-binary
         path: target/x86_64-unknown-linux-gnu/release/ArmorPass
 
-    - name: Upload Linux x86_64 Artifact
-      if: github.event_name == 'push' && github.ref == 'refs/heads/master'
-      uses: actions/upload-artifact@v2
-      with:
-        name: linux-x86_64-binary
-        path: target/i686-unknown-linux-gnu/release/ArmorPass
