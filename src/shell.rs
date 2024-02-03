@@ -89,9 +89,9 @@ impl Command {
 }
 
 enum ShellState {
-    MainPrompt,
-    AuthenticatePrompt,
-    InitializationPrompt,
+    Main,
+    Authenticate,
+    Initialization,
 }
 
 pub struct Shell {
@@ -104,7 +104,7 @@ impl Default for Shell {
     fn default() -> Shell {
         Shell {
             should_terminate: false,
-            state: ShellState::AuthenticatePrompt,
+            state: ShellState::Authenticate,
             password_manager: None,
         }
     }
@@ -112,12 +112,11 @@ impl Default for Shell {
 
 impl Shell {
     pub fn new() -> Shell {
-        let initial_state;
-        if armor_file_exists() {
-            initial_state = ShellState::AuthenticatePrompt;
+        let initial_state = if armor_file_exists() {
+             ShellState::Authenticate
         } else {
-            initial_state = ShellState::InitializationPrompt;
-        }
+             ShellState::Initialization
+        };
         Shell {
             should_terminate: false,
             state: initial_state,
@@ -128,15 +127,15 @@ impl Shell {
     pub fn run(&mut self) {
         while !self.should_terminate {
             match self.state {
-                ShellState::MainPrompt => {
+                ShellState::Main => {
                     let input = prompt(PROMPT_MAIN_COMMAND);
                     self.handle_main_command(&input);
                 }
-                ShellState::AuthenticatePrompt => {
+                ShellState::Authenticate => {
                     let masterpassword = prompt(PROMPT_MASTER_PASSWORD);
                     self.handle_authentication_prompt(&masterpassword);
                 }
-                ShellState::InitializationPrompt => {
+                ShellState::Initialization => {
                     self.handle_initialization();
                 }
             }
@@ -168,7 +167,7 @@ impl Shell {
         let file_path = home_dir.join(".armorpass.enc");
         match PasswordManager::new(file_path, masterpassword) {
             Ok(password_manager) => {
-                self.state = ShellState::MainPrompt;
+                self.state = ShellState::Main;
                 self.password_manager = Some(password_manager);
             }
             Err(e) => {
@@ -193,7 +192,7 @@ impl Shell {
         let file_path = home_dir.join(".armorpass.enc");
         match PasswordManager::new(file_path, &input) {
             Ok(password_manager) => {
-                self.state = ShellState::MainPrompt;
+                self.state = ShellState::Main;
                 self.password_manager = Some(password_manager);
             }
             Err(e) => {
@@ -249,8 +248,7 @@ impl Shell {
         let password_manager = self.get_password_manager_mut();
         match password_manager.retrieve_credential(options) {
             Some(credential) => {
-                //print_credential(credential);
-                let _ = copy_to_clipboard_then_clear(&credential.password);
+                copy_to_clipboard_then_clear(&credential.password);
             }
             None => eprintln!(
                 "[Warn]: Could not find a record for that identifier/username combination"
