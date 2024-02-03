@@ -9,6 +9,8 @@ const IDENTIFIER: &str = "website.com";
 //const SALT: [u8; 16] = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16];
 const MASTERPASSWORD: &str = "heynowbrowncowaylmao";
 
+use std::path::PathBuf;
+use uuid::Uuid;
 use ArmorPass::password_manager::CredentialSet;
 use ArmorPass::password_manager::PasswordManager;
 use ArmorPass::shell::CreatePasswordOptions;
@@ -17,8 +19,6 @@ use ArmorPass::shell::RetrieveAllOptions;
 use ArmorPass::shell::RetrieveSingleOptions;
 use ArmorPass::shell::UpdatePasswordOptions;
 use ArmorPass::utility::ArmorPassError;
-use std::path::PathBuf;
-use uuid::Uuid;
 
 fn teardown(filepath: &PathBuf) {
     let _ = std::fs::remove_file(filepath);
