@@ -1,12 +1,12 @@
 use crate::password_manager::{CredentialSet, MaskedCredentialSet};
+use arboard::Clipboard;
 use prettytable::{row, Cell, Row, Table};
 use std::env;
-use std::io::{stdin, stdout, Write};
-use std::path::PathBuf;
-use arboard::Clipboard;
-use std::{thread, time::Duration};
 use std::error::Error;
 use std::fs;
+use std::io::{stdin, stdout, Write};
+use std::path::PathBuf;
+use std::{thread, time::Duration};
 
 pub fn validate_identifier(identifier: &str) -> Result<(), ArmorPassError> {
     if !is_at_least_three_characters_long(identifier) {
@@ -77,9 +77,9 @@ pub fn print_credential(credential: &CredentialSet) {
 }
 
 //TODO - needs to compile different versions of method per OS, allow override for file location
-//somehow? 
+//somehow?
 pub fn get_home_dir() -> Result<PathBuf, Box<dyn Error>> {
-    match env::var("HOME") { 
+    match env::var("HOME") {
         Ok(path) => Ok(PathBuf::from(path)),
         Err(e) => Err(Box::new(e)),
     }
@@ -94,7 +94,9 @@ pub fn copy_to_clipboard_then_clear(text: &str) {
                 return;
             }
 
-            println!("[INFO]: Sensitive data copied to clipboard. It will be cleared in 20 seconds.");
+            println!(
+                "[INFO]: Sensitive data copied to clipboard. It will be cleared in 20 seconds."
+            );
 
             let content_to_clear = text.to_owned();
 
@@ -115,11 +117,11 @@ pub fn copy_to_clipboard_then_clear(text: &str) {
 }
 
 pub fn armor_file_exists() -> bool {
-    let home_dir =  get_home_dir().unwrap();
+    let home_dir = get_home_dir().unwrap();
     let file_path = home_dir.join(".armorpass.enc");
     match fs::metadata(file_path) {
         Ok(_) => true,
-        Err(_e) => false
+        Err(_e) => false,
     }
 }
 

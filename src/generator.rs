@@ -13,8 +13,8 @@ pub struct PasswordGeneratorOptions {
 impl PasswordGeneratorOptions {
     fn makes_sense(&self) -> bool {
         let total_min_requirements = self.min_uppercase.unwrap_or(0)
-                                      + self.min_numbers.unwrap_or(0)
-                                      + self.min_special_characters.unwrap_or(0);
+            + self.min_numbers.unwrap_or(0)
+            + self.min_special_characters.unwrap_or(0);
 
         self.length.unwrap_or(20) >= total_min_requirements
     }
@@ -22,7 +22,7 @@ impl PasswordGeneratorOptions {
 
 impl PasswordGeneratorOptions {
     pub fn prompt_for_options(&mut self) {
-        loop  {
+        loop {
             self.length = prompt_for_number("Enter desired length (default 20): ");
 
             self.min_uppercase =
@@ -41,7 +41,6 @@ impl PasswordGeneratorOptions {
                 println!("[INFO]: minimum number, special values and uppercase characters must not exceed the length");
                 break;
             }
-            
         }
     }
 }

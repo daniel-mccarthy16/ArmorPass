@@ -1,12 +1,12 @@
 use crate::generator::PasswordGenerator;
 use crate::generator::PasswordGeneratorOptions;
 use crate::password_manager::PasswordManager;
+use crate::strings::{PROMPT_MAIN_COMMAND, PROMPT_MASTER_PASSWORD};
+use crate::utility::armor_file_exists;
 use crate::utility::copy_to_clipboard_then_clear;
 use crate::utility::get_home_dir;
 use crate::utility::print_credential_list;
 use crate::utility::prompt;
-use crate::utility::armor_file_exists;
-use crate::strings::{PROMPT_MAIN_COMMAND, PROMPT_MASTER_PASSWORD};
 
 enum Command {
     Create(CreatePasswordOptions),
@@ -66,7 +66,12 @@ impl Command {
             cs if cs.eq_ignore_ascii_case("update") => {
                 Some(Command::Update(UpdatePasswordOptions::default()))
             }
-            cs if cs.eq_ignore_ascii_case("quit") || cs.eq_ignore_ascii_case("exit") ||  cs.eq_ignore_ascii_case("q") => Some(Command::Quit),
+            cs if cs.eq_ignore_ascii_case("quit")
+                || cs.eq_ignore_ascii_case("exit")
+                || cs.eq_ignore_ascii_case("q") =>
+            {
+                Some(Command::Quit)
+            }
             _ => None,
         }
     }
@@ -86,7 +91,7 @@ impl Command {
 enum ShellState {
     MainPrompt,
     AuthenticatePrompt,
-    InitializationPrompt
+    InitializationPrompt,
 }
 
 pub struct Shell {
@@ -116,7 +121,7 @@ impl Shell {
         Shell {
             should_terminate: false,
             state: initial_state,
-            password_manager: None
+            password_manager: None,
         }
     }
 
@@ -130,7 +135,7 @@ impl Shell {
                 ShellState::AuthenticatePrompt => {
                     let masterpassword = prompt(PROMPT_MASTER_PASSWORD);
                     self.handle_authentication_prompt(&masterpassword);
-                },
+                }
                 ShellState::InitializationPrompt => {
                     self.handle_initialization();
                 }
@@ -158,7 +163,8 @@ impl Shell {
     }
 
     fn handle_authentication_prompt(&mut self, masterpassword: &str) {
-        let home_dir = get_home_dir().expect("[ERROR]: could not find home directory, is HOME env variable missing?");
+        let home_dir = get_home_dir()
+            .expect("[ERROR]: could not find home directory, is HOME env variable missing?");
         let file_path = home_dir.join(".armorpass.enc");
         match PasswordManager::new(file_path, masterpassword) {
             Ok(password_manager) => {
@@ -182,7 +188,8 @@ impl Shell {
                 break;
             }
         }
-        let home_dir = get_home_dir().expect("[ERROR]: could not find home directory, is HOME env variable missing?");
+        let home_dir = get_home_dir()
+            .expect("[ERROR]: could not find home directory, is HOME env variable missing?");
         let file_path = home_dir.join(".armorpass.enc");
         match PasswordManager::new(file_path, &input) {
             Ok(password_manager) => {
@@ -193,7 +200,6 @@ impl Shell {
                 eprintln!("Failed auth attempt: {}", e);
             }
         }
-
     }
 
     fn handle_create_command(&mut self, options: &mut CreatePasswordOptions) {
@@ -270,7 +276,7 @@ impl Shell {
                 options.username.as_str()
             )
         }
-    } 
+    }
 
     fn get_password_manager_mut(&mut self) -> &mut PasswordManager {
         self.password_manager

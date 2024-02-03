@@ -21,20 +21,20 @@ pub struct CredentialSet {
 }
 
 impl CredentialSet {
-   pub fn mask(&self) -> MaskedCredentialSet {
+    pub fn mask(&self) -> MaskedCredentialSet {
         MaskedCredentialSet {
             identifier: self.identifier.clone(),
             username: self.username.clone(),
-            password: "*".repeat(self.password.len())
+            password: "*".repeat(self.password.len()),
         }
-   }
+    }
 }
 
 #[derive(Debug)]
 pub struct MaskedCredentialSet {
     pub identifier: String,
     pub username: String,
-    pub password: String
+    pub password: String,
 }
 
 impl PasswordManager {
@@ -148,7 +148,10 @@ impl PasswordManager {
             .collect()
     }
 
-    pub fn retrieve_all_credentials_masked(&self, options: &RetrieveAllOptions) -> Vec<MaskedCredentialSet> {
+    pub fn retrieve_all_credentials_masked(
+        &self,
+        options: &RetrieveAllOptions,
+    ) -> Vec<MaskedCredentialSet> {
         let identifer_name: &str = options.identifier.as_str();
         self.records
             .iter()
