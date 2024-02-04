@@ -79,7 +79,12 @@ pub fn print_credential(credential: &CredentialSet) {
 //TODO - needs to compile different versions of method per OS, allow override for file location
 //somehow?
 pub fn get_home_dir() -> Result<PathBuf, Box<dyn Error>> {
-    match env::var("HOME") {
+    let home dir = if cfg!(target_os = "windows") {
+        env::var("USERPROFILE")
+    } else {
+        env::var("HOME")
+    }
+    match home_dir {
         Ok(path) => Ok(PathBuf::from(path)),
         Err(e) => Err(Box::new(e)),
     }
