@@ -88,9 +88,6 @@ pub fn get_home_dir() -> Result<PathBuf, Box<dyn Error>> {
     }
 }
 
-
-
-
 //TODO - Give this a return type?
 pub fn copy_to_clipboard_then_clear(text: &str) {
     match Clipboard::new() {
