@@ -90,9 +90,10 @@ Setting up ArmorPass on Windows involves a few additional steps to handle OpenSS
 
 
 ## Planned Features
-- **Windows Support**: Upcoming port to Windows to make ArmorPass a cross-platform solution for password management.
-- **Enhanced Security Features**: Continuous improvement of security features to ensure your credentials are protected with the most advanced technologies.
-- **Offer statically linked binary**: Update pipeline to produce standalone binaries for ease of use.
+- **Offer Statically Linked Binary**: Update the build pipeline to produce standalone binaries for ease of use.
+- **Sync Between Devices**: Implement a secure method to synchronize the password file across multiple devices, ensuring seamless access to credentials from any location.
+- **Two-Factor Authentication (2FA)**: Add support for two-factor authentication for added security during the login process.
+- **Auto-Fill Functionality**: Develop a browser extension or integration to auto-fill passwords on web pages, enhancing user convenience.
 
 ## Contributing
 Contributions to ArmorPass are welcome! If you have suggestions, bug reports, or contributions, please open an issue or a pull request.
