@@ -7,7 +7,7 @@ edition = "2021"
 
 [dependencies]
 arboard = "3.3.0"
-openssl = "0.10.63"
+openssl = "0.10.64"
 prettytable-rs = "0.10.0"
 rand = "0.8.5"
 serde = { version = "1.0.195", features = [ "derive" ] }
